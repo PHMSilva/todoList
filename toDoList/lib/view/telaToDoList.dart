@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:toDoList/controller/todoStore.dart';
 import 'package:toDoList/model/usuario.dart';
+import 'package:toDoList/widget/cardDelete.dart';
 import 'package:toDoList/widget/cardEdit.dart';
 import 'package:toDoList/widget/cardToDo.dart';
 import 'package:toDoList/widget/formularioToDo.dart';
@@ -17,6 +18,10 @@ class _ToDoListState extends State<ToDoList> {
   final todoUsuario = ToDoStore();
   bool isEdit = false;
   bool isDelete = false;
+
+  _excluirUsuario(BuildContext context) {
+    todoUsuario.delete();
+  }
 
   _cadastrarUsuario(
       String nome, String sobreNome, String email, String numeroTelefone) {
@@ -77,77 +82,165 @@ class _ToDoListState extends State<ToDoList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.amber,
-        title: Text(
-          'To Do List',
-          style: TextStyle(color: Colors.white, fontSize: 25),
+        appBar: AppBar(
+          backgroundColor: Colors.amber,
+          title: Text(
+            'To Do List',
+            style: TextStyle(color: Colors.white, fontSize: 25),
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body: Container(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: 10.0,
-            horizontal: 15.0,
-          ),
-          child: Observer(
-            builder: (_) => ListView.builder(
-              itemCount: todoUsuario.listaTodo.length,
-              itemBuilder: (context, index) {
-                var usuario = todoUsuario.listaTodo[index];
-                //return Text(usuario.nome);
-                return isEdit == false && isDelete == false
-                    ? CardToDo(usuario)
-                    : isEdit == true
-                        ? CardEdit(usuario, index, _alterarCard)
-                        : Text('deletar');
-              },
+        body: Container(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 10.0,
+              horizontal: 15.0,
+            ),
+            child: Observer(
+              builder: (_) => ListView.builder(
+                itemCount: todoUsuario.listaTodo.length,
+                itemBuilder: (context, index) {
+                  var usuario = todoUsuario.listaTodo[index];
+                  //return Text(usuario.nome);
+                  return isEdit == false && isDelete == false
+                      ? CardToDo(usuario)
+                      : isEdit == true
+                          ? CardEdit(usuario, index, _alterarCard)
+                          : Container(
+                              child: Column(
+                                children: [
+                                  Divider(
+                                    height: 10,
+                                  ),
+                                  CheckboxListTile(
+                                    title: Text(
+                                        '${usuario.nome} ${usuario.sobreNome}'),
+                                    //onTap: () {},
+                                    secondary: Icon(
+                                      Icons.person_rounded,
+                                      color: Colors.purple,
+                                    ),
+                                    //onTap: _retornarDados,
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    value: usuario.checked,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        todoUsuario.changedChecked(index);
+                                      });
+                                    },
+                                  ),
+                                  Divider(
+                                    color: Colors.purple[700],
+                                    height: 10,
+                                  ),
+                                ],
+                              ),
+                            );
+                },
+              ),
             ),
           ),
         ),
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            backgroundColor: Colors.red[100],
-            child: Icon(
-              Icons.delete,
-              color: Colors.red[700],
-            ),
-            onPressed: () => _setDelete(context),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          FloatingActionButton(
-            backgroundColor: Colors.amber[100],
-            child: Icon(
-              Icons.edit,
-              color: Colors.orange[700],
-            ),
-            onPressed: () => _setEdit(context),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          FloatingActionButton(
-            backgroundColor: Colors.purple[100],
-            child: Icon(
-              Icons.add,
-              size: 30.0,
-              color: Colors.purple[700],
-            ),
-            onPressed: () => _formularioTodo(context),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-        ],
-      ),
-    );
+        bottomNavigationBar: isDelete
+            ? BottomAppBar(
+                color: Colors.amber[100],
+                notchMargin: 5.0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          todoUsuario.resetChecked();
+                          _setDelete(context);
+                        });
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.purple[700],
+                          ),
+                          Text(
+                            'Cancelar',
+                            style: TextStyle(
+                              color: Colors.purple[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          todoUsuario.delete();
+                          _setDelete(context);
+                        });
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Deletar',
+                            style: TextStyle(
+                              color: Colors.purple[700],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: Colors.purple[700],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : null,
+        floatingActionButton: isDelete
+            ? null
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  FloatingActionButton(
+                    backgroundColor: Colors.red[100],
+                    child: Icon(
+                      Icons.delete,
+                      color: Colors.red[700],
+                    ),
+                    onPressed: () => _setDelete(context),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  FloatingActionButton(
+                    backgroundColor: Colors.amber[100],
+                    child: Icon(
+                      Icons.edit,
+                      color: Colors.orange[700],
+                    ),
+                    onPressed: () => _setEdit(context),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  FloatingActionButton(
+                    backgroundColor: Colors.purple[100],
+                    child: Icon(
+                      Icons.add,
+                      size: 30.0,
+                      color: Colors.purple[700],
+                    ),
+                    onPressed: () => _formularioTodo(context),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                ],
+              ));
   }
 }
 /*

@@ -25,6 +25,30 @@ abstract class _ToDoStore with Store {
     listaTodo.insert(index,
         todoUser); // insere o elemento especificando o posicao desejada na lista
   }
+
+  @action
+  void resetChecked() {
+    listaTodo.forEach((element) {
+      element.checked = false;
+    });
+  }
+
+  @action
+  void changedChecked(int index) {
+    listaTodo[index].checked = !listaTodo[index].checked;
+  }
+
+  @action
+  void delete() {
+    List<Usuario> toRemove = [];
+    listaTodo.forEach((element) {
+      if (element.checked) {
+        //listaTodo.remove(element);
+        toRemove.add(element);
+      }
+    });
+    listaTodo.removeWhere((element) => toRemove.contains(element));
+  }
 }
 //todo action altera um observável;
 
